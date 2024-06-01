@@ -6,6 +6,10 @@ import os
 import json
 import time 
 import random
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+import requests
+
 api = NinjaExtraAPI(urls_namespace='Test')
 
 
@@ -104,14 +108,22 @@ def extractUsingPlaywright(email,password):
         return locations
     
 def sendDataToWebHook(locations):
-    print("Sending Data To WebHook")
+    formatted_locations = [{'location': loc} for loc in locations]
+    locations_json = json.dumps(formatted_locations)
+    url = "https://ecom.teaconnect.io/integration/trigger/update"
+    response = requests.post(url, json={"location_name" : locations_json})
     
     
 def getLocations(email , password):
     Locations = extractUsingPlaywright(email,password)
-    sendDataToWebHook(Locations)
-    return Locations
-    
+    sendDataToWebHook(Locations)    
+
+
+def run_in_executor(func, *args):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(asyncio.to_thread(func, *args))
+    loop.close()
 
 
 @api_controller("", tags=["Test"])
@@ -127,11 +139,14 @@ class Locations:
         email = data.email
         password = data.password
         print("Email: " , email)
-        print("Password: " , password)  
-        locations = getLocations(email , password)     
+        print("Password: " , password)
+    
+        # Schedule the background task
+        executor = ThreadPoolExecutor()
+        executor.submit(run_in_executor, getLocations, email, password)
+
         return 200, {
-            "message": "Hello World!",
-            "Locations": locations
+            "message": "Success",
         }
     
 api.register_controllers(Locations)
