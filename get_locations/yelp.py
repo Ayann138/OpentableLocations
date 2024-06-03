@@ -1,6 +1,6 @@
 from ninja_extra import api_controller, http_get, http_post, NinjaExtraAPI
 from typing import Dict
-from .schemas import *
+from .schemas import Test
 from playwright.sync_api import sync_playwright
 import json
 import time 
@@ -12,64 +12,69 @@ import requests
 api = NinjaExtraAPI(urls_namespace='Yelp')
 
 def login(page, email, password):
-    email_selector = 'input[name="email"]'
-    password_selector = 'input[name="password"]'
-    time.sleep(random.uniform(2, 6)) 
-    page.click(email_selector)
-    for char in email:
-        page.type(email_selector, char)
-        time.sleep(random.uniform(0.1,0.3)) 
-    page.click(password_selector)
-    time.sleep(random.uniform(2, 6))
-    for char in password:
-        page.type(password_selector, char)
-        time.sleep(random.uniform(0.1, 0.3)) 
-    time.sleep(2)  
-    page.locator('"Log in"').click()
-    
-def getLocationNames(page):
-    time.sleep(10)  
-    buttonDiv = page.query_selector('p[class*=" y-css-y9og9z"]')
-    if not buttonDiv:
-        print("Button Div Not Found")
-        return False
-    buttonDiv.click()
-    time.sleep(3)
+    try:
+        email_selector = 'input[name="email"]'
+        password_selector = 'input[name="password"]'
+        time.sleep(random.uniform(2, 6)) 
+        page.click(email_selector)
+        for char in email:
+            page.type(email_selector, char)
+            time.sleep(random.uniform(0.1, 0.3)) 
+        page.click(password_selector)
+        time.sleep(random.uniform(2, 6))
+        for char in password:
+            page.type(password_selector, char)
+            time.sleep(random.uniform(0.1, 0.3)) 
+        time.sleep(2)  
+        page.locator('"Log in"').click()
+    except Exception as e:
+        raise Exception(f"Login failed: {str(e)}")
 
-    time.sleep(2)
-    
-    locations = []
-    locationsDiv = page.query_selector_all('div[class*="business-info__09f24__xmMju"]')
-    print(len(locationsDiv))
-    for index, location in enumerate(locationsDiv):
-        locationNameSelector = location.query_selector('p[class*=" y-css-jf9frv"]')
-        if locationNameSelector:
-            locationName = locationNameSelector.inner_text()
-            locations.append(locationName)
-    return locations
+def getLocationNames(page):
+    try:
+        time.sleep(10)  
+        buttonDiv = page.query_selector('p[class*=" y-css-y9og9z"]')
+        if not buttonDiv:
+            raise Exception("Button Div Not Found")
+        buttonDiv.click()
+        time.sleep(3)
+        time.sleep(2)
+
+        locations = []
+        locationsDiv = page.query_selector_all('div[class*="business-info__09f24__xmMju"]')
+        for index, location in enumerate(locationsDiv):
+            locationNameSelector = location.query_selector('p[class*=" y-css-jf9frv"]')
+            if locationNameSelector:
+                locationName = locationNameSelector.inner_text()
+                locations.append(locationName)
+        return locations
+    except Exception as e:
+        raise Exception(f"Failed to get location names: {str(e)}")
 
 def extractUsingPlaywright(email, password):
     url = 'https://biz.yelp.com/login'
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
-        context = browser.new_context()
-        page = context.new_page()
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context()
+            page = context.new_page()
 
-        page.goto(url, timeout=3200000)
-        login(page, email, password)
-        time.sleep(random.uniform(7, 12))
-        # Checking Login or Not
-        errorIcon = page.query_selector('span[class*="icon error-16"]')
-        if errorIcon:
-            return None, "Invalid Credentials", False
-       # page.goto('https://guestcenter.opentable.com/restaurant/732226/home', timeout=12000)
-        print("Logged-In")
-        page.wait_for_load_state("load")
-        time.sleep(random.uniform(5, 9))
-        print("Finding The Locations")
-        locations = getLocationNames(page)
-        print("Locations: " , locations)
-        return locations, None, True
+            page.goto(url, timeout=3200000)
+            login(page, email, password)
+            time.sleep(random.uniform(7, 12))
+            # Checking Login or Not
+            errorIcon = page.query_selector('span[class*="icon error-16"]')
+            if errorIcon:
+                return None, "Invalid Credentials", False
+            print("Logged-In")
+            page.wait_for_load_state("load")
+            time.sleep(random.uniform(5, 9))
+            print("Finding The Locations")
+            locations = getLocationNames(page)
+            print("Locations: ", locations)
+            return locations, None, True
+    except Exception as e:
+        return None, str(e), False
     
 def sendDataToWebHook(locations, error, valid):
     if not valid:
