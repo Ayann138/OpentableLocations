@@ -35,7 +35,10 @@ def getLocationNames(page):
         time.sleep(15)
         page.wait_for_load_state("load")
         buttonDiv = page.query_selector('p[class*=" y-css-y9og9z"]')
+        print("Current URL: " , page.url)
+        
         if not buttonDiv:
+            print("Current URL if button fails: " , page.url)
             raise Exception("Button Div Not Found")
         buttonDiv.click()
         time.sleep(3)
