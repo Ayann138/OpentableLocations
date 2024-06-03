@@ -27,6 +27,7 @@ def login(page, email, password):
             time.sleep(random.uniform(0.1, 0.3)) 
         time.sleep(2)  
         page.locator('"Log in"').click()
+        print("Login button clicked")
     except Exception as e:
         raise Exception(f"Login failed: {str(e)}")
 
@@ -35,10 +36,8 @@ def getLocationNames(page):
         time.sleep(15)
         page.wait_for_load_state("load")
         buttonDiv = page.query_selector('p[class*=" y-css-y9og9z"]')
-        print("Current URL: " , page.url)
         
         if not buttonDiv:
-            print("Current URL if button fails: " , page.url)
             raise Exception("Button Div Not Found")
         buttonDiv.click()
         time.sleep(3)
@@ -70,6 +69,10 @@ def extractUsingPlaywright(email, password):
             errorIcon = page.query_selector('span[class*="icon error-16"]')
             if errorIcon:
                 return None, "Invalid Credentials", False
+            current_url = page.url
+            print("Current URL: " , current_url)
+            if "login" in current_url.lower():
+                raise Exception("Error: CAPTCHA detected on login page, cannot proceed")
             print("Logged-In")
             page.wait_for_load_state("load")
             time.sleep(random.uniform(5, 9))
