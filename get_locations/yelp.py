@@ -32,7 +32,8 @@ def login(page, email, password):
 
 def getLocationNames(page):
     try:
-        time.sleep(10)  
+        time.sleep(15)
+        page.wait_for_load_state("load")
         buttonDiv = page.query_selector('p[class*=" y-css-y9og9z"]')
         if not buttonDiv:
             raise Exception("Button Div Not Found")
