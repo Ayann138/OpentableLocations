@@ -17,8 +17,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from get_locations.locations import api as location_api
-
+from get_locations.yelp import api as yelp_api
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('location/', location_api.urls),
+    path('opentable/', location_api.urls),
+    path('yelp/', yelp_api.urls),
+
 ]
