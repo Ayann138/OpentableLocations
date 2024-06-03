@@ -28,6 +28,7 @@ def login(page, email, password):
     page.locator('"Log in"').click()
     
 def getLocationNames(page):
+    time.sleep(10)  
     buttonDiv = page.query_selector('p[class*=" y-css-y9og9z"]')
     if not buttonDiv:
         print("Button Div Not Found")
@@ -50,7 +51,7 @@ def getLocationNames(page):
 def extractUsingPlaywright(email, password):
     url = 'https://biz.yelp.com/login'
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=False)
         context = browser.new_context()
         page = context.new_page()
 
@@ -62,9 +63,10 @@ def extractUsingPlaywright(email, password):
         if errorIcon:
             return None, "Invalid Credentials", False
        # page.goto('https://guestcenter.opentable.com/restaurant/732226/home', timeout=12000)
+        print("Logged-In")
         page.wait_for_load_state("load")
         time.sleep(random.uniform(5, 9))
-        
+        print("Finding The Locations")
         locations = getLocationNames(page)
         print("Locations: " , locations)
         return locations, None, True
