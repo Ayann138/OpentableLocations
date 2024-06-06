@@ -62,8 +62,9 @@ def extractUsingPlaywright(email, password):
 
             page.goto(url, timeout=3200000)
             login(page, email, password)
-            time.sleep(random.uniform(15, 20))
-            print("Waiting For 15-20 seconds.")
+            print("Waiting For 1 minute.")
+            
+            time.sleep(random.uniform(60,70))
             page.wait_for_load_state("load")
 
             # Checking if still on the login page
