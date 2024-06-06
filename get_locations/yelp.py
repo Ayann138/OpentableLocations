@@ -33,7 +33,7 @@ def login(page, email, password):
 
 def getLocationNames(page):
     try:
-        time.sleep(15)
+        time.sleep(random.uniform(5,8))
         page.wait_for_load_state("load")
         buttonDiv = page.query_selector('p[class*=" y-css-y9og9z"]')
         
@@ -41,8 +41,6 @@ def getLocationNames(page):
             raise Exception("Button Div Not Found")
         buttonDiv.click()
         time.sleep(3)
-        time.sleep(2)
-
         locations = []
         locationsDiv = page.query_selector_all('div[class*="business-info__09f24__xmMju"]')
         for index, location in enumerate(locationsDiv):
@@ -64,7 +62,8 @@ def extractUsingPlaywright(email, password):
 
             page.goto(url, timeout=3200000)
             login(page, email, password)
-            time.sleep(random.uniform(7, 12))
+            time.sleep(random.uniform(5, 10))
+            page.wait_for_load_state("load")
             # Checking Login or Not
             errorIcon = page.query_selector('span[class*="icon error-16"]')
             if errorIcon:
