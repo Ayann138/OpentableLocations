@@ -56,13 +56,14 @@ def extractUsingPlaywright(email, password):
     url = 'https://biz.yelp.com/login'
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=False)
+            browser = p.chromium.launch(headless=True)
             context = browser.new_context()
             page = context.new_page()
 
             page.goto(url, timeout=3200000)
             login(page, email, password)
-            time.sleep(random.uniform(10, 15))
+            time.sleep(random.uniform(15, 20))
+            print("Waiting For 15-20 seconds.")
             page.wait_for_load_state("load")
 
             # Checking if still on the login page
