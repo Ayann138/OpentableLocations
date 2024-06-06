@@ -20,11 +20,14 @@ def login(page, email, password):
         for char in email:
             page.type(email_selector, char)
             time.sleep(random.uniform(0.1, 0.3))
+        print("Email Entered")
         page.click(password_selector)
         time.sleep(random.uniform(2, 6))
         for char in password:
             page.type(password_selector, char)
             time.sleep(random.uniform(0.1, 0.3))
+        print("Password Entered")
+        
         time.sleep(2)
         page.locator('"Log in"').click()
         print("Login button clicked")
@@ -62,9 +65,9 @@ def extractUsingPlaywright(email, password):
 
             page.goto(url, timeout=3200000)
             login(page, email, password)
-            print("Waiting For 5 minute.")
+            print("Waiting For 1 minute.")
             
-            time.sleep(random.uniform(280,300))
+            time.sleep(random.uniform(60,70))
             page.wait_for_load_state("load")
 
             # Checking if still on the login page
@@ -80,8 +83,12 @@ def extractUsingPlaywright(email, password):
             if "login" in current_url.lower():
 
                 page_content = page.content()
-                print("Login failed, still on login page. Page content:")
-                time.sleep(5000)
+                print("Login failed, still on login page. Logging again:")
+                login(page, email, password)  
+                print("Waiting For 1 minute.")
+                time.sleep(random.uniform(70,80)) 
+                print("Current URL after re-login attempt:", page.url)
+                time.sleep(200)
                 #print(page_content)
                 return None, "Login failed, still on login page", False
 
