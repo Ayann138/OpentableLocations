@@ -71,6 +71,7 @@ def extractUsingPlaywright(email, password):
                 return None, "Invalid Credentials", False
             current_url = page.url
             print("Current URL: " , current_url)
+            print("Page Content: " , page.content())
             if "login" in current_url.lower():
                 raise Exception("Error: CAPTCHA detected on login page, cannot proceed")
             print("Logged-In")
