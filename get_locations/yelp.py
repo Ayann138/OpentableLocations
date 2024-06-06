@@ -3,7 +3,7 @@ from typing import Dict
 from .schemas import Test
 from playwright.sync_api import sync_playwright
 import json
-import time 
+import time
 import random
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
@@ -15,17 +15,17 @@ def login(page, email, password):
     try:
         email_selector = 'input[name="email"]'
         password_selector = 'input[name="password"]'
-        time.sleep(random.uniform(2, 6)) 
+        time.sleep(random.uniform(2, 6))
         page.click(email_selector)
         for char in email:
             page.type(email_selector, char)
-            time.sleep(random.uniform(0.1, 0.3)) 
+            time.sleep(random.uniform(0.1, 0.3))
         page.click(password_selector)
         time.sleep(random.uniform(2, 6))
         for char in password:
             page.type(password_selector, char)
-            time.sleep(random.uniform(0.1, 0.3)) 
-        time.sleep(2)  
+            time.sleep(random.uniform(0.1, 0.3))
+        time.sleep(2)
         page.locator('"Log in"').click()
         print("Login button clicked")
     except Exception as e:
@@ -56,34 +56,43 @@ def extractUsingPlaywright(email, password):
     url = 'https://biz.yelp.com/login'
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(headless=False)
             context = browser.new_context()
             page = context.new_page()
 
             page.goto(url, timeout=3200000)
             login(page, email, password)
-            time.sleep(random.uniform(5, 10))
+            time.sleep(random.uniform(10, 15))
             page.wait_for_load_state("load")
-            # Checking Login or Not
-            errorIcon = page.query_selector('span[class*="icon error-16"]')
-            if errorIcon:
-                return None, "Invalid Credentials", False
-            page.wait_for_load_state("load")
-            time.sleep(random.uniform(5, 9))
-            current_url = page.url
-            print("Current URL: " , current_url)
-            if "login" in current_url.lower():                
-                raise Exception("Error: CAPTCHA detected on login page, cannot proceed")
-                #print("Page Content: " , page.content())
-            print("Logged-In")
 
-            print("Finding The Locations")
+            # Checking if still on the login page
+
+            # Check for error messages
+            error_message = page.query_selector('span[class*="error"]')
+            if error_message:
+                error_text = error_message.inner_text()
+                print("Error message detected:", error_text)
+                return None, f"Error on page: {error_text}", False
+            current_url = page.url
+            print("Current URL after login attempt:", current_url)
+            if "login" in current_url.lower():
+
+                page_content = page.content()
+                print("Login failed, still on login page. Page content:")
+                time.sleep(5000)
+                #print(page_content)
+                return None, "Login failed, still on login page", False
+
+            print("Logged in successfully, proceeding to extract locations")
+
             locations = getLocationNames(page)
-            print("Locations: ", locations)
+            print("Locations extracted:", locations)
             return locations, None, True
+
     except Exception as e:
+        print(f"Exception during login or extraction: {str(e)}")
         return None, str(e), False
-    
+
 def sendDataToWebHook(locations, error, valid):
     if not valid:
         payload = {
@@ -104,8 +113,11 @@ def sendDataToWebHook(locations, error, valid):
     return response
 
 def getLocations(email, password):
+    print("Starting location extraction process...")
     locations, error, valid = extractUsingPlaywright(email, password)
+    print("Extraction complete. Sending data to webhook...")
     response = sendDataToWebHook(locations, error, valid)
+    print("Data sent to webhook. Response:", response.status_code, response.text)
     return response
 
 def run_in_executor(func, *args):
@@ -116,19 +128,19 @@ def run_in_executor(func, *args):
 
 @api_controller("", tags=["Yelp"])
 class Locations:
-    @http_get("/", response={200: Dict, 400: Dict})        
-    def TestRoute(self, request):      
+    @http_get("/", response={200: Dict, 400: Dict})
+    def TestRoute(self, request):
         return 200, {
-            "message": "Hello World!", 
+            "message": "Hello World!",
         }
-        
-    @http_post("/locations", response={200: Dict, 400: Dict})        
-    def TestRoutePost(self, request, data: Test):  
+
+    @http_post("/locations", response={200: Dict, 400: Dict})
+    def TestRoutePost(self, request, data: Test):
         email = data.email
         password = data.password
-        print("Email: ", email)
-        print("Password: ", password)
-    
+        print("Email:", email)
+        print("Password:", password)
+
         executor = ThreadPoolExecutor()
         executor.submit(run_in_executor, getLocations, email, password)
 
