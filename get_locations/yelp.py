@@ -59,22 +59,8 @@ def extractUsingPlaywright(email, password):
     url = 'https://biz.yelp.com/login'
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)  # Use headless mode
-            context = browser.new_context(
-                viewport={"width": 1280, "height": 800},  # Set standard viewport size
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"  # Set User-Agent
-            )
-            
-            # Stealth mode adjustments
-            context.add_init_script("""
-                Object.defineProperty(navigator, 'webdriver', { get: () => false });
-                window.chrome = {
-                    runtime: {}
-                };
-                Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
-                Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
-            """)
-
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context()
             page = context.new_page()
 
             page.goto(url, timeout=3200000)
@@ -97,9 +83,9 @@ def extractUsingPlaywright(email, password):
             if "login" in current_url.lower():
 
                 page_content = page.content()
-                print(page_content)
                 print("Login failed, still on login page. Logging again:")
-                time.sleep(20)
+                time.sleep(200)
+                #print(page_content)
                 return None, "Login failed, still on login page", False
 
             print("Logged in successfully, proceeding to extract locations")
