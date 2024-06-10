@@ -101,7 +101,7 @@ def extractUsingPlaywright(email, password):
 def sendDataToWebHook(locations, error, valid):
     if not valid:
         payload = {
-            "status": "False",
+            "status": "false",
             "error": error,
             "platform": "yelp"
         }
@@ -109,7 +109,7 @@ def sendDataToWebHook(locations, error, valid):
         formatted_locations = [{'location': loc} for loc in locations]
         locations_json = json.dumps(formatted_locations)
         payload = {
-            "status": "True",
+            "status": "true",
             "locations": locations_json,
             "platform": "yelp"
         }
