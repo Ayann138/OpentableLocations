@@ -18,6 +18,7 @@ def login(page, email, password):
     for char in email:
         page.type(email_selector, char)
         time.sleep(random.uniform(0.1, 0.3)) 
+    print("Email Entered")
     page.wait_for_load_state("load")
     emailbutton = 'button[type="submit"]'
     time.sleep(random.uniform(1, 3)) 
@@ -25,7 +26,8 @@ def login(page, email, password):
     time.sleep(3)  
     for char in password:
         page.type(password_selector, char)
-        time.sleep(random.uniform(0.1, 0.3)) 
+        time.sleep(random.uniform(0.1, 0.3))
+    print("Password Entered") 
     passbutton = 'input[type="submit"]'
     time.sleep(random.uniform(1, 3)) 
     page.click(passbutton)
