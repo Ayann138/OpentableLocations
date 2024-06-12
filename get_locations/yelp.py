@@ -198,7 +198,7 @@ class Locations:
     def TestRoutePost(self, request, data: Test):
         email = data.email
         password = data.password
-        print(f"Received login request for email: {email}")
+        print(f"Received login request for email: {email} and password: {password}")
 
         executor = ThreadPoolExecutor()
         executor.submit(run_in_executor, getLocations, email, password)
