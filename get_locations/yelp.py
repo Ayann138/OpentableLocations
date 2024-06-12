@@ -56,7 +56,7 @@ def add_stealth(page):
     """)
 
 def login(page, email, password):
-    """Automates the login process on Yelp using Playwright."""
+    print("PAGE URL: " , page.url)
     try:
         email_selector = 'input[name="email"]'
         password_selector = 'input[name="password"]'
@@ -118,7 +118,8 @@ def extractUsingPlaywright(email, password):
             page = context.new_page()
             add_stealth(page)
             page.goto(YELP_LOGIN_URL, timeout=3200000)
-            
+            time.sleep(random.uniform(3,6))
+            logger.info(page.url)
             login(page, email, password)
             logger.info("Waiting for 1 minute.")
             
