@@ -60,14 +60,17 @@ def extractUsingPlaywright(email, password):
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
-            context = browser.new_context()
+            context = browser.new_context(
+                viewport={"width": 1280, "height": 800},  # Set standard viewport size
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"  # Set User-Agent
+            )
             page = context.new_page()
 
             page.goto(url, timeout=3200000)
             login(page, email, password)
             print("Waiting For 1 minute.")
             
-            time.sleep(random.uniform(60,70))
+            time.sleep(random.uniform(50,60))
             page.wait_for_load_state("load")
 
             # Checking if still on the login page
@@ -81,9 +84,10 @@ def extractUsingPlaywright(email, password):
             current_url = page.url
             print("Current URL after login attempt:", current_url)
             if "login" in current_url.lower():
-
                 page_content = page.content()
+                print(page_content)
                 print("Login failed, still on login page. Logging again:")
+
                 time.sleep(200)
                 #print(page_content)
                 return None, "Login failed, still on login page", False
@@ -99,6 +103,7 @@ def extractUsingPlaywright(email, password):
         return None, str(e), False
 
 def sendDataToWebHook(locations, error, valid):
+  #  print("Locations: in Web Hook: " , locations)
     if not valid:
         payload = {
             "status": "false",
@@ -113,8 +118,10 @@ def sendDataToWebHook(locations, error, valid):
             "locations": locations_json,
             "platform": "yelp"
         }
+        print("Date sent over web hook: " , payload)
     url = "https://ecom.teaconnect.io/integration/trigger/update"
     response = requests.post(url, json=payload)
+
     return response
 
 def getLocations(email, password):
@@ -122,7 +129,7 @@ def getLocations(email, password):
     locations, error, valid = extractUsingPlaywright(email, password)
     print("Extraction complete. Sending data to webhook...")
     response = sendDataToWebHook(locations, error, valid)
-    print("Data sent to webhook. Response:", response.status_code, response.text)
+  #  print("Data sent to webhook. Response:", response.status_code, response.text)
     return response
 
 def run_in_executor(func, *args):
@@ -154,3 +161,11 @@ class Locations:
         }
 
 api.register_controllers(Locations)
+
+
+
+
+
+
+
+
