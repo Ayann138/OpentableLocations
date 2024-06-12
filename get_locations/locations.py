@@ -33,9 +33,11 @@ def login(page, email, password):
     page.click(passbutton)
     
 def getLocationNames(page):
+    time.sleep(5)
     buttonDiv = page.query_selector('button[class*="icon__touchable___KbPwcx9Lf7vYSzlRcriNs Nav__restaurantName___nVhB83U8682y5H2n2xxh1"]')
     if not buttonDiv:
         print("Button Div Not Found")
+        time.sleep(300)
         return False
     buttonDiv.click()
     time.sleep(3)
@@ -72,10 +74,10 @@ def extractUsingPlaywright(email, password):
         print("Out-Side log-in")
         time.sleep(random.uniform(7, 12))
         # Checking Login or Not
-        errorIcon = page.query_selector('div[class*="okta-form-infobox-error infobox infobox-error"]')
-        if errorIcon:
-            print("Invalid Credentials")
-            return None, "Invalid Credentials", False
+        # errorIcon = page.query_selector('div[class*="okta-form-infobox-error infobox infobox-error"]')
+        # if errorIcon:
+        #     print("Invalid Credentials")
+        #     return None, "Invalid Credentials", False
         page.goto('https://guestcenter.opentable.com/restaurant/732226/home', timeout=12000)
         page.wait_for_load_state("load")
         time.sleep(random.uniform(5, 9))
@@ -99,7 +101,7 @@ def sendDataToWebHook(locations, error, valid):
             "locations": locations_json,
             "platform": "opentable"
         }
-    url = "https://ecom.teaconnect.io/integration_sse"
+    url = "https://ecom.teaconnect.io/integration/trigger/update"
     response = requests.post(url, json=payload)
     print("PayLoad: " , payload)
     return response

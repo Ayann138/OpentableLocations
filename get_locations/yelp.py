@@ -17,7 +17,7 @@ api = NinjaExtraAPI(urls_namespace='Yelp')
 YELP_LOGIN_URL = 'https://biz.yelp.com/login'
 USER_AGENT = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
               "(KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-WEBHOOK_URL = "https://ecom.teaconnect.io/integration_sse"
+WEBHOOK_URL = "https://ecom.teaconnect.io/integration/trigger/update"
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
