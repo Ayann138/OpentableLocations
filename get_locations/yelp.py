@@ -52,6 +52,7 @@ def add_stealth(page):
 
 def login(page, email, password):
     print("PAGE URL: ", page.url)
+    print(page.content())
     try:
         email_selector = 'input[name="email"]'
         password_selector = 'input[name="password"]'
