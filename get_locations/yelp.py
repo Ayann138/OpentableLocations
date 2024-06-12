@@ -108,10 +108,7 @@ def extractUsingPlaywright(email, password, retries=3):
         try:
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=True)
-                context = browser.new_context(
-                    viewport={"width": 1280, "height": 800},
-                    user_agent=USER_AGENT
-                )
+                context = browser.new_context()
                 page = context.new_page()
                 add_stealth(page)
                 page.goto(YELP_LOGIN_URL, timeout=3200000)
