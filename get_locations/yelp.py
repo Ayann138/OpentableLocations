@@ -1,7 +1,7 @@
 from ninja_extra import api_controller, http_get, http_post, NinjaExtraAPI
 from typing import Dict
 from .schemas import Test
-from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError, Error as PlaywrightError
 import json
 import time
 import random
@@ -52,7 +52,6 @@ def add_stealth(page):
 
 def login(page, email, password):
     print("PAGE URL: ", page.url)
-    print(page.content())
     try:
         email_selector = 'input[name="email"]'
         password_selector = 'input[name="password"]'
@@ -102,50 +101,52 @@ def getLocationNames(page):
         print(f"Failed to get location names: {str(e)}")
         raise
 
-def extractUsingPlaywright(email, password):
+def extractUsingPlaywright(email, password, retries=3):
     """Uses Playwright to log in and extract location names from Yelp."""
-    try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context(
-                viewport={"width": 1280, "height": 800},
-                user_agent=USER_AGENT
-            )
-            page = context.new_page()
-            add_stealth(page)
-            page.goto(YELP_LOGIN_URL, timeout=3200000)
-            time.sleep(random.uniform(3, 6))
-            print(page.url)
-            login(page, email, password)
-            print("Waiting for 1 minute.")
-            
-            time.sleep(random.uniform(50, 60))
-            page.wait_for_load_state("load")
+    attempt = 0
+    while attempt < retries:
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                context = browser.new_context(
+                    viewport={"width": 1280, "height": 800},
+                    user_agent=USER_AGENT
+                )
+                page = context.new_page()
+                add_stealth(page)
+                page.goto(YELP_LOGIN_URL, timeout=3200000)
+                time.sleep(random.uniform(3, 6))
+                print(page.url)
+                login(page, email, password)
+                print("Waiting for 1 minute.")
+                
+                time.sleep(random.uniform(50, 60))
+                page.wait_for_load_state("load")
 
-            error_message = page.query_selector('span[class*="error"]')
-            if error_message:
-                error_text = error_message.inner_text()
-                print(f"Error message detected: {error_text}")
-                return None, f"Error on page: {error_text}", False
+                error_message = page.query_selector('span[class*="error"]')
+                if error_message:
+                    error_text = error_message.inner_text()
+                    print(f"Error message detected: {error_text}")
+                    return None, f"Error on page: {error_text}", False
 
-            current_url = page.url
-            print(f"Current URL after login attempt: {current_url}")
-            if "login" in current_url.lower():
-                page_content = page.content()
-                print("Login failed, still on login page.")
-                return None, "Login failed, still on login page", False
+                current_url = page.url
+                print(f"Current URL after login attempt: {current_url}")
+                if "login" in current_url.lower():
+                    page_content = page.content()
+                    print("Login failed, still on login page.")
+                    return None, "Login failed, still on login page", False
 
-            print("Logged in successfully, proceeding to extract locations")
-            locations = getLocationNames(page)
-            print(f"Locations extracted: {locations}")
-            return locations, None, True
+                print("Logged in successfully, proceeding to extract locations")
+                locations = getLocationNames(page)
+                print(f"Locations extracted: {locations}")
+                return locations, None, True
 
-    except PlaywrightTimeoutError as e:
-        print(f"Playwright timeout: {str(e)}")
-        return None, str(e), False
-    except Exception as e:
-        print(f"Exception during login or extraction: {str(e)}")
-        return None, str(e), False
+        except (PlaywrightTimeoutError, PlaywrightError) as e:
+            attempt += 1
+            print(f"Attempt {attempt} failed: {str(e)}")
+            time.sleep(10)  # Wait before retrying
+
+    return None, "Failed after multiple attempts", False
 
 def sendDataToWebHook(locations, error, valid):
     """Sends extracted data to a webhook."""
