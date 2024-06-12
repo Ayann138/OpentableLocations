@@ -97,7 +97,7 @@ def sendDataToWebHook(locations, error, valid):
             "locations": locations_json,
             "platform": "opentable"
         }
-    url = "https://ecom.teaconnect.io/integration/trigger/update"
+    url = "https://ecom.teaconnect.io/integration_sse"
     response = requests.post(url, json=payload)
     print("PayLoad: " , payload)
     return response
