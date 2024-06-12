@@ -8,7 +8,6 @@ import random
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import requests
-import logging
 
 # Initialize the NinjaExtraAPI
 api = NinjaExtraAPI(urls_namespace='Yelp')
@@ -18,10 +17,6 @@ YELP_LOGIN_URL = 'https://biz.yelp.com/login'
 USER_AGENT = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
               "(KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
 WEBHOOK_URL = "https://ecom.teaconnect.io/integration_sse"
-
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 def add_stealth(page):
     """Add stealth modifications to the page to bypass bot detection."""
@@ -56,7 +51,7 @@ def add_stealth(page):
     """)
 
 def login(page, email, password):
-    print("PAGE URL: " , page.url)
+    print("PAGE URL: ", page.url)
     try:
         email_selector = 'input[name="email"]'
         password_selector = 'input[name="password"]'
@@ -66,20 +61,20 @@ def login(page, email, password):
         for char in email:
             page.type(email_selector, char)
             time.sleep(random.uniform(0.1, 0.3))
-        logger.info("Email entered")
+        print("Email entered")
         
         page.click(password_selector)
         time.sleep(random.uniform(2, 6))
         for char in password:
             page.type(password_selector, char)
             time.sleep(random.uniform(0.1, 0.3))
-        logger.info("Password entered")
+        print("Password entered")
         
         time.sleep(2)
         page.locator('"Log in"').click()
-        logger.info("Login button clicked")
+        print("Login button clicked")
     except Exception as e:
-        logger.error(f"Login failed: {str(e)}")
+        print(f"Login failed: {str(e)}")
         raise
 
 def getLocationNames(page):
@@ -103,7 +98,7 @@ def getLocationNames(page):
                 locations.append(locationName)
         return locations
     except Exception as e:
-        logger.error(f"Failed to get location names: {str(e)}")
+        print(f"Failed to get location names: {str(e)}")
         raise
 
 def extractUsingPlaywright(email, password):
@@ -118,10 +113,10 @@ def extractUsingPlaywright(email, password):
             page = context.new_page()
             add_stealth(page)
             page.goto(YELP_LOGIN_URL, timeout=3200000)
-            time.sleep(random.uniform(3,6))
-            logger.info(page.url)
+            time.sleep(random.uniform(3, 6))
+            print(page.url)
             login(page, email, password)
-            logger.info("Waiting for 1 minute.")
+            print("Waiting for 1 minute.")
             
             time.sleep(random.uniform(50, 60))
             page.wait_for_load_state("load")
@@ -129,26 +124,26 @@ def extractUsingPlaywright(email, password):
             error_message = page.query_selector('span[class*="error"]')
             if error_message:
                 error_text = error_message.inner_text()
-                logger.error(f"Error message detected: {error_text}")
+                print(f"Error message detected: {error_text}")
                 return None, f"Error on page: {error_text}", False
 
             current_url = page.url
-            logger.info(f"Current URL after login attempt: {current_url}")
+            print(f"Current URL after login attempt: {current_url}")
             if "login" in current_url.lower():
                 page_content = page.content()
-                logger.error("Login failed, still on login page.")
+                print("Login failed, still on login page.")
                 return None, "Login failed, still on login page", False
 
-            logger.info("Logged in successfully, proceeding to extract locations")
+            print("Logged in successfully, proceeding to extract locations")
             locations = getLocationNames(page)
-            logger.info(f"Locations extracted: {locations}")
+            print(f"Locations extracted: {locations}")
             return locations, None, True
 
     except PlaywrightTimeoutError as e:
-        logger.error(f"Playwright timeout: {str(e)}")
+        print(f"Playwright timeout: {str(e)}")
         return None, str(e), False
     except Exception as e:
-        logger.error(f"Exception during login or extraction: {str(e)}")
+        print(f"Exception during login or extraction: {str(e)}")
         return None, str(e), False
 
 def sendDataToWebHook(locations, error, valid):
@@ -168,19 +163,19 @@ def sendDataToWebHook(locations, error, valid):
                 "locations": locations_json,
                 "platform": "yelp"
             }
-            logger.info(f"Data sent to webhook: {payload}")
+            print(f"Data sent to webhook: {payload}")
         
         response = requests.post(WEBHOOK_URL, json=payload)
         return response
     except requests.RequestException as e:
-        logger.error(f"Failed to send data to webhook: {str(e)}")
+        print(f"Failed to send data to webhook: {str(e)}")
         raise
 
 def getLocations(email, password):
     """Main function to get locations and send them to the webhook."""
-    logger.info("Starting location extraction process...")
+    print("Starting location extraction process...")
     locations, error, valid = extractUsingPlaywright(email, password)
-    logger.info("Extraction complete. Sending data to webhook...")
+    print("Extraction complete. Sending data to webhook...")
     response = sendDataToWebHook(locations, error, valid)
     return response
 
@@ -203,7 +198,7 @@ class Locations:
     def TestRoutePost(self, request, data: Test):
         email = data.email
         password = data.password
-        logger.info(f"Received login request for email: {email}")
+        print(f"Received login request for email: {email}")
 
         executor = ThreadPoolExecutor()
         executor.submit(run_in_executor, getLocations, email, password)
